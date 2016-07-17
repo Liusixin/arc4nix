@@ -1,0 +1,6 @@
+.idea
+arcpy4nix/build
+RuntimeManager/lib/*.jar
+RuntimeManager/project/*
+RuntimeManager/target/
+*.pyc
