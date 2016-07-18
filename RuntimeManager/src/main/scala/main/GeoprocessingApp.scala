@@ -44,37 +44,43 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
             context.system.actorSelection("/user/LocalServerInstance") ! LocalServerContainer.start(r(1))
         case s if s.startsWith("execute ") => // We put a " " here to ensure execute will be a complete command
           val r = s.split(' ')
-          println(GeoprocessingApp.execute(r(1), r(2)))
-          self ! GeoprocessingApp.execute(r(1), r(2))
+          println(GeoprocessingApp.execute(r(1), r(2), r(3)))
+          self ! GeoprocessingApp.execute(r(1), r(2), r(3))
         case _@s =>
           println(s"[MESSAGE]$s")
       }
 
-    case GeoprocessingApp.execute(input: String, script: String) => {
+    case GeoprocessingApp.execute(input: String, block: String, script: String) =>
       if (geoprocessingUrl != null) {
-        val gp = new Geoprocessor(geoprocessingUrl + "/ExecFile")
+        val gp = new Geoprocessor(geoprocessingUrl + "/Execute Script")
         val globalVariables = new GPString("GlobalVars")
         globalVariables.setValue(input)
+        val predefinedBlock = new GPString("PreBlock")
+        predefinedBlock.setValue(block)
         val scriptBody = new GPString("ScriptBody")
         scriptBody.setValue(script)
         val parameters = new util.ArrayList[GPParameter]()
         parameters.add(globalVariables)
         parameters.add(scriptBody)
 
-        gp.submitJobAndGetResultsAsync(parameters, null, null, new GPJobResultCallbackListener {
+        gp.submitJobAndGetResultsAsync(parameters, Array("Result"), null, new GPJobResultCallbackListener {
           override def onError(throwable: Throwable): Unit = {
             Console.err.println(throwable.getMessage)
           }
 
           override def onCallback(gpJobResource: GPJobResource, gpParameters: Array[GPParameter]): Unit = {
             // Well actually we have no results to return....
-            println(gpJobResource.getMessages)
+            val result = gpParameters(0).asInstanceOf[GPString]
+            println(result.getValue)
+            log.info(gpJobResource.getMessages.map(p => p.getDescription).mkString("\n"))
           }
         })
+      } else {
+        log.error("Service is not ready. Try again later!")
       }
-    }
 
     case GeoprocessingApp.messageUrl(url: String) => {
+      log.info(s"service is at $url")
       geoprocessingUrl = url
     }
 
@@ -89,7 +95,7 @@ object GeoprocessingApp {
 
   case class messageUrl(url: String)
 
-  case class execute(input: String, script: String)
+  case class execute(input: String, block: String, script: String)
 
   def encode(inputString: String, compressed: Boolean): String = {
     if (!compressed) {

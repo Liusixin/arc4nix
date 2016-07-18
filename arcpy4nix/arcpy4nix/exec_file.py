@@ -46,15 +46,19 @@ def detect_wine():
 
 def decode_global_vars(global_variables):
     """
-    :param global_variables: str the
-    :return a dictionary of global variables and their values could be fed to the script body
-    :rtype dict
+    :param global_variables: str the encoded line of input variables to put in globals()
+    :return None
     """
+
+    # Now let's assign arcpy locally allow global variables importing "arcpy"
+    # e.g. some_path<-path|raw|/home/username/someraster.img;p<-value|raw|arcpy.sa.Raster(some_path)
+    arcpy = arc
     var_list = global_variables.split(';')
-    var_dict = {}
     for var_str in var_list:
         var_name, var_value_tuple = var_str.split('<-')
         ispath, encode, var_value_encoded = var_value_tuple.split('|')
+        # Encoding: gzip -> b64
+        # Decoding: b64 -> gzip
         if encode.find('b64') != -1:
             var_value_encoded = var_value_encoded.decode('base64').replace('\n', '')
         if encode.find('zlib') != -1:
@@ -62,26 +66,35 @@ def decode_global_vars(global_variables):
             s = gzip.GzipFile(fileobj=r)
             var_value_encoded = s.read()
         var_value = var_value_encoded.replace('\n', '')
-        # On Linux, we need convert linux path to wine path to call it.
-        # However, we have no way to determine if we are under wine because python-wine will tell it is one windows.
-        # So we need a custom check.
-        on_wine = detect_wine()
-        if ispath.lower() == 'path' and on_wine:
-            try:
-                proc = subprocess.Popen(["winepath", "-w", var_value], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                output, err = proc.communicate()
-                status = proc.returncode
-                arc.AddMessage(output)
-                if status == 0:
-                    var_value = output
-                    arc.AddMessage('the decoded path points -> %s' % var_value)
-                else:
-                    arc.AddWarning(output)
-                    arc.AddWarning(err)
-            except OSError, ex:
-                arc.AddWarning(str(ex))
-        var_dict[var_name] = eval(var_value)
-    return var_dict
+        # if we're passing a value, let's eval it
+        if ispath.lower() == 'value':
+            arc.AddMessage("Add %s=eval(%s)" % (var_name, var_value))
+            globals()[var_name] = eval(var_value)
+        # Otherwise, we either transform the path under wine, or just treat it as a string
+        else:
+            # On Linux, we need convert linux path to wine path to call it.
+            # However, we have no way to determine if we are under wine because python-wine will tell it is one windows.
+            # So we need a custom check.
+            on_wine = detect_wine()
+            if ispath.lower() == 'path' and on_wine:
+                try:
+                    proc = subprocess.Popen(["winepath", "-w", var_value], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    output, err = proc.communicate()
+                    status = proc.returncode
+                    arc.AddMessage(output)
+                    if status == 0:
+                        var_value = output
+                        arc.AddMessage('Add path %s=%s' % (var_name, var_value))
+                        globals()[var_name] = var_value
+                    else:
+                        arc.AddWarning(output)
+                        arc.AddWarning(err)
+                except OSError, ex:
+                    arc.AddWarning(str(ex))
+            else:
+                arc.AddMessage('Add string %s=%s' % (var_name, var_value))
+                globals()[var_name] = var_value
+    pass
 
 
 def execute_file():
@@ -127,7 +140,7 @@ def execute_file():
             arc.SetParameter(3, "false")
 
 # Main entry
-# It is very luck that even in ArcGIS Runtime embbed Python, we still have __main__ here.
+# It is very luck that even in ArcGIS Runtime embed Python, we still have __main__ here.
 if __name__ == "__main__":
     execute_file()
 
