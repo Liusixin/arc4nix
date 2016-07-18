@@ -54,13 +54,14 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
       if (geoprocessingUrl != null) {
         val gp = new Geoprocessor(geoprocessingUrl + "/Execute Script")
         val globalVariables = new GPString("GlobalVars")
-        globalVariables.setValue(input)
+        globalVariables.setValue(GeoprocessingApp.decode(input))
         val predefinedBlock = new GPString("PreBlock")
-        predefinedBlock.setValue(block)
+        predefinedBlock.setValue(GeoprocessingApp.decode(block))
         val scriptBody = new GPString("ScriptBody")
-        scriptBody.setValue(script)
+        scriptBody.setValue(GeoprocessingApp.decode(script))
         val parameters = new util.ArrayList[GPParameter]()
         parameters.add(globalVariables)
+        parameters.add(predefinedBlock)
         parameters.add(scriptBody)
 
         gp.submitJobAndGetResultsAsync(parameters, Array("Result"), null, new GPJobResultCallbackListener {
@@ -97,6 +98,14 @@ object GeoprocessingApp {
 
   case class execute(input: String, block: String, script: String)
 
+  def decode(inputString: String): String = {
+    if (!inputString.startsWith("b64:"))
+      inputString
+    else {
+      new String(Base64.decodeBase64(inputString.substring(4).getBytes(Charset.forName("UTF-8"))))
+    }
+  }
+
   def encode(inputString: String, compressed: Boolean): String = {
     if (!compressed) {
       return new String(Base64.encodeBase64(inputString.getBytes(Charset.forName("UTF-8"))))
@@ -114,21 +123,14 @@ object GeoprocessingApp {
     new String(t)
   }
 
-  def encodeInputParameterFile(inputVariablesPath: String): String = {
-    val inputSource = Source.fromFile(inputVariablesPath)
-    val encoded_input_args = inputSource.getLines.map(line => {
-      val name_value_tuple = line.trim.split('=')
-      val var_name = name_value_tuple(0)
-      val r = name_value_tuple(1).split('|')
-      val isPath = r(0).toLowerCase
-      val var_value_raw = r(1)
-      val var_value_encoded = GeoprocessingApp.encode(var_value_raw, true)
-      s"$var_name<-$isPath|zlib+b64|$var_value_encoded"
-    })
-    encoded_input_args.mkString(";")
-  }
-
   def main(args: Array[String]) {
+
+    if(args.length >= 2) {
+      ArcGISRuntime.setClientID(args(1))
+      val license = args(2)
+      val extLicenses = args.slice(3, args.length)
+      ArcGISRuntime.License.setLicense(license, extLicenses)
+    }
 
     ArcGISRuntime.initialize()
 

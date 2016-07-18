@@ -2,13 +2,9 @@
   * Created by sugar on 12/29/15.
   */
 
-import java.io.File
-
 import main.GeoprocessingApp
 import org.junit.Assert._
 import org.junit.Test
-
-import scala.io.Source
 
 
 class EncodeTest {
@@ -23,15 +19,10 @@ class EncodeTest {
   }
 
   @Test
-  def TestReadInput(): Unit = {
-    val inputVariablePath = "/home/sugar/gpk_test/input.txt"
-    println(GeoprocessingApp.encodeInputParameterFile(inputVariablePath))
-  }
-
-  @Test
-  def TestReadScript(): Unit = {
-    val script = "/home/sugar/gpk_test/script.txt"
-    println(Source.fromFile(script).mkString)
+  def TestDecode(): Unit = {
+    val before = "arcpy.env.workspace=\"c:/\""
+    val after = GeoprocessingApp.decode("b64:" + GeoprocessingApp.encode(before, false))
+    assertEquals(before, after)
   }
 
 }

@@ -1,3 +1,5 @@
+import sbtassembly.MergeStrategy
+
 name := "RuntimeManager"
 
 version := "1.0"
@@ -11,3 +13,12 @@ libraryDependencies ++= Seq(
   // "commons-codec" % "commons-codec" % "1.10",
   "junit" % "junit" % "4.12" % Test
 )
+
+target in assembly := file("../arcpy4nix/arcpy4nix/data/")
+
+assemblyMergeStrategy in assembly := {
+  case PathList(ps @ _*) if ps.last.endsWith("LicenseLevel.class") || ps.last.endsWith("LicenseResult.class") => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
