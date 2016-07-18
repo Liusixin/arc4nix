@@ -1,5 +1,6 @@
 import os
 from .wrap_base import *
+from .result import Result
 
 gpk_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),

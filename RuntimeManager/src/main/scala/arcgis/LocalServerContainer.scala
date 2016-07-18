@@ -135,7 +135,7 @@ class LocalServerContainer extends Actor{
     case _@x =>
       println(s"Unhandled command ${x}")
 
-  }h
+  }
 
 }
 
