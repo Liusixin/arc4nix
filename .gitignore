@@ -5,3 +5,6 @@ RuntimeManager/project/*
 RuntimeManager/target/
 *.pyc
 *.pyo
+out
+*.iml
+arcpy4nix/arcpy4nix/arcpy4nix/data/*.jar
