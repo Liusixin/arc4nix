@@ -63,7 +63,7 @@ def fix_paths_kwargs(kwarg, force_repr=__on_windows__):
 
 
 def send_wrap(name, *args, **kwargs):
-    variable_sent = 
+    variable_sent = ";".join(__path_expr_holder__)
     func_str = create(name, *args, **kwargs)
     print(func_str)
 

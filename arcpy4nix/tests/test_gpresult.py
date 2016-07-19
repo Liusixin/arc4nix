@@ -1,3 +1,5 @@
+"""This test must run on a machine with ArcGIS installed."""
+
 import unittest
 import arcpy
 from arcpy4nix.exec_file import dump_gpresult
