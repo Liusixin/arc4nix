@@ -1,25 +1,9 @@
 import arcpy4nix as arcpy
 
-def gp_fixargs(args, strip_right_nones=False, string_results=True):
-    """Adjusts arguments passed into a function to be arcgisscripting-friendly:
-       pass in stringified result objects and unwrapped arc objects"""
-    new_args = []
-    for arg in args:
-        if isinstance(arg, (tuple, list)):
-            new_args.append(gp_fixargs(arg))
-        else:
-            new_args.append(arg)
-        del arg
-    if strip_right_nones:
-        while new_args and new_args[-1] is None:
-            new_args.pop()
-    del args
-    return new_args
-
-#veg = "vegtype"
-#suitableVeg = "/output/Output.gdb/suitable_vegetation"
-#whereClause = "HABITAT = 1"
-#arcpy.Select_analysis(veg, suitableVeg, whereClause, a=1, b="2", c=[3,"4"])
+veg = "vegtype"
+suitableVeg = "/output/Output.gdb/suitable_vegetation"
+whereClause = "HABITAT = 1"
+arcpy.Select_analysis(veg, suitableVeg, whereClause, a=1, b="2", c=[3,"4"])
 
 # Buffer areas of impact around major roads
 roads = "majorrds"

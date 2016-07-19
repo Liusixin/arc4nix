@@ -5,6 +5,8 @@ from pprint import pprint as pp
 
 me = sys.modules[__name__]
 
+__on_windows__ = sys.platform.find("win") != -1
+
 __all__ = []
 
 __all_functions__ = {
@@ -22,7 +24,9 @@ def map_path_var(in_path):
     return var_name + "<-path|b64|" + in_path.encode("base64").rstrip(), var_name
 
 
-def fix_paths_args(arg):
+def fix_paths_args(arg, force_repr=__on_windows__):
+    if force_repr:
+        return repr(arg)
     arg_repr = []
     # if args is list, recursively goes inside
     if isinstance(arg, list):
@@ -53,12 +57,13 @@ def fix_paths_args(arg):
     
     return ",".join(arg_repr)
 
-def fix_paths_kwargs(kwarg):
+def fix_paths_kwargs(kwarg, force_repr=__on_windows__):
     var, arg = kwarg
-    return '%s=%s' % (var, fix_paths_args(arg))
+    return '%s=%s' % (var, repr(arg) if force_repr else fix_paths_args(arg))
 
 
 def send_wrap(name, *args, **kwargs):
+    variable_sent = 
     func_str = create(name, *args, **kwargs)
     print(func_str)
 
@@ -78,7 +83,6 @@ def create(name, *args, **kwargs):
         new_kwargs = map(fix_paths_kwargs, kwargs.items())
         expr += ", ".join(new_kwargs)
     expr += ")"
-    pp(__path_expr_holder__)
     return repr(expr)
 
 
