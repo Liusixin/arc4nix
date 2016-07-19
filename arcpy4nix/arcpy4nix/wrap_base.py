@@ -7,7 +7,7 @@ me = sys.modules[__name__]
 
 __on_windows__ = sys.platform.find("win") != -1
 
-__all__ = []
+__all__ = ['add_predefined_statement', 'map_path_var', 'predefined_block']
 
 __all_functions__ = {
     'analysis': ['Buffer', 'Clip', 'Erase', 'Identity', 'Intersect', 'SymDiff', 'Update', 'Split', 'Near',
@@ -17,6 +17,13 @@ __all_functions__ = {
 }
 
 __path_expr_holder__ = []
+
+predefined_block = []
+
+def add_predefined_statement(statement):
+    if isinstance(statement, basestring):
+        predefined_block.append(statement)
+        
 
 def map_path_var(in_path):
     var_name = "p_" + str(uuid.uuid4()).replace("-", "_")
@@ -86,12 +93,11 @@ def create(name, *args, **kwargs):
     return repr(expr)
 
 
-
-
-
 for cat, func_list in __all_functions__.items():
     for func_stub in func_list:
         func_name = "%s_%s" % (func_stub, cat)
         # We need actually do something tricky.
         setattr(me, func_name, functools.partial(send_wrap, func_name))
         __all__.append(func_name)
+
+del me
