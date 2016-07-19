@@ -1,0 +1,3 @@
+class Raster(object):
+
+    pass
