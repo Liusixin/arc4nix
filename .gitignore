@@ -1,5 +1,5 @@
 .idea
-arcpy4nix/build
+arc4nix/build
 RuntimeManager/lib/*.jar
 RuntimeManager/project/*
 RuntimeManager/target/
@@ -7,4 +7,4 @@ RuntimeManager/target/
 *.pyo
 out
 *.iml
-arcpy4nix/arcpy4nix/data/*.jar
+arc4nix/arc4nix/data/*.jar

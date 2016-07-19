@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.12" % Test
 )
 
-target in assembly := file("../arcpy4nix/arcpy4nix/data/")
+target in assembly := file("../arc4nix/arc4nix/data/")
 
 assemblyMergeStrategy in assembly := {
   case PathList(ps @ _*) if ps.last.endsWith("LicenseLevel.class") || ps.last.endsWith("LicenseResult.class") => MergeStrategy.first

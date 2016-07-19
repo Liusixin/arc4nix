@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<?xml-stylesheet type="text/xsl" href="http://www.arcgisonline.com/home/pkinfostylesheet.xsl"?>
+<pkinfo Culture='en-US'>
+<ID>06992207-5B3C-49FD-A0B8-C451946D2FDC</ID>
+<name>ExecFile2</name>
+<version>10.2</version>
+<size>-1</size>
+<created></created>
+<type>Geoprocessing Package</type>
+<servable>true</servable>
+<packagelocation></packagelocation>
+<pkinfolocation></pkinfolocation>
+</pkinfo>

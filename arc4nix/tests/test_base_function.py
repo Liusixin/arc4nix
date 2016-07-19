@@ -1,7 +1,7 @@
 import os
 
 import unittest
-import arcpy4nix as arcpy
+import arc4nix as arcpy
 
 class GpFuncionGenTestCase(unittest.TestCase):
 
