@@ -5,8 +5,6 @@ arc4nix
 arc4nix provides a set of [arcpy](http://desktop.arcgis.com/en/arcmap/10.3/analyze/arcpy/what-is-arcpy-.htm)-compatible APIs on both Windows and Linux platform.
 arc4nix uses ArcGIS Java Runtime SDK to provide cross-platform functionality to execute many geospatial analytical [arcpy functions](https://developers.arcgis.com/java/guide/local-server-geoprocessing-tools-support.htm).
 
-It is also possible to set up ArcGIS Server backend for arc4nix to run a wider range to geoprocessing functions. (WIP) The provided geoprocessing package is able to execute arbitrary arcpy functions.
-
 ## How to use
 Simply replace
 ```Python
@@ -65,7 +63,7 @@ The package is not extensively tested. Bug reports and contributes are extremely
 THIS PACKAGE WILL FAITHFULLY EXECUTE ANY PYTHON SCRIPTS PASSED TO IT. BAD GUYS CAN COMPLETELY CONTROL YOUR SYSTEM USING EXPOSED LOCAL SERVER INSTANCE. PLEASE ENSURE YOUR WORK ENVIRONMENT IS COMPLETELY SAFE AND TRUSTED.
 
 ## How it works:
-The idea is very simple. For each arcpy call, we actually send that line of code to ArcGIS Runtime Local Server (or remote ArcGIS Server). The GPResult is dumped to a JSON `GPString` and captured by a dummpy `arc4nix.Result` instance. Most of work is to make transparent wrap of arcpy functions.
+The idea is very simple. For each arcpy call, we actually send that line of code to ArcGIS Runtime Local Server. The GPResult is dumped to a JSON `GPString` and captured by a dummpy `arc4nix.Result` instance. Most of work is to make transparent wrap of arcpy functions.
 
 ## Working with arcpy.sa.Raster:
 *Working in progress now. Please check back later*
@@ -82,7 +80,7 @@ Functions/Classes in following toolboxes are not implemented. It is possible to 
 If you're using any of these functions, it is extremely welcomed to provide me some example how they work as python scripts. Some of them are not supported by ArcGIS Runtime. If you figured out how to call these functions via arc4nix (not through `send` function), please also let me know and I will add supports for them.
 
 ## Limitations
-- Trying to call functions not listed in [supported function](https://developers.arcgis.com/java/guide/local-server-geoprocessing-tools-support.htm) will trigger a "Tool is not licensed" error. To run these tools with arcpy4nix, you have to set up an ArcGIS Server backend. 
+- Trying to call functions not listed in [supported function](https://developers.arcgis.com/java/guide/local-server-geoprocessing-tools-support.htm) will trigger a "Tool is not licensed" error. To run these tools with arcpy4nix, you have to set up an ArcGIS Server backend. (See future plan)
 - Passing arc4nix.env to arcpy.env to server is not supported. You need manually set environments in "predefined block". WIP
 - It it not possible to retrieve any vector dataset from "in_memory" workspace. If you work with "in_memory" workspace, remember save them to a physical path at the end.
 - `Geometry`, `SpatialReferece`, `Extent` classes are not supported now. Implementation is planning.
@@ -104,3 +102,6 @@ Linking arc4nix statically or dynamically with other modules is making a combine
 In addition, as a special exception, the copyright holders of arc4nix give you permission to combine [name of your program] with free software programs or libraries that are released under the GNU LGPL and with code included in the standard release of ESRI licensed software under the your ESRI agreements (or modified versions of such code, with unchanged license). You may copy and distribute such a system following the terms of the GNU GPL for arc4nix and the licenses of the other code concerned{, provided that you include the source code of that other code when and as the GNU GPL requires distribution of source code}.
 
 Note that people who make modified versions of arc4nix are not obligated to grant this special exception for their modified versions; it is their choice whether to do so. The GNU General Public License gives permission to release a modified version without this exception; this exception also makes it possible to release a modified version which carries forward this exception.
+
+## Future Plan
+Set up ArcGIS Server backend for arc4nix to run a wider range to geoprocessing functions. (WIP) The provided geoprocessing package is able to execute arbitrary arcpy functions. Unless ArcGIS Server and local clients are able to share same storage space (e.g. NAS, SDE database), a protocol to transfer data is essential. This might be very complex and very restricted.
