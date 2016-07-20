@@ -55,7 +55,7 @@ The arc4nix acutally `eval()` each arcpy function in a seperate process (actuall
 
 Native Linux paths are acceptable. arc4nix will dynamically map them into correct *wine* path. However, it is highly recommended to use absolute path on Linux because this would be the easist way to let arc4nix know the variable is a path to be mapped to *wine* drivers (Z:). I am working in progress to tag each parameter in each function whether a path or not. Please be aware that ArcGIS Runtime Local Server has its own working directory, which is different from working directory of the native Python process. Using relative path in wine may cause unexpected result. 
 
-If no license is set via `arc4nix.set_license`, ArcGIS Runtime will work in developer mode which pops up a dialog showing license notice. If you'd like to deploy this program in headless-linux environment (e.g. HPC cluster), you must obtain a stardard license from ESRI and proper extensions.
+If no license is set in `arc4nix.local_server`, ArcGIS Runtime will work in developer mode which pops up a dialog showing license notice. If you'd like to deploy this program in headless-linux environment (e.g. HPC cluster), you must obtain a stardard license from ESRI and proper extensions. To set license code, EDIT `arc4nix/local_server.py` then reinstall the python package.
 
 The package is not extensively tested. Bug reports and contributes are extremely welcome.
 

@@ -8,8 +8,11 @@ import threading
 import Queue
 import time
 
+# PUT YOUR LICENSE CODE AND CLIENT ID HERE
 client_id = ""
+# PUT BASE LICENSE CODE FIRST THEN EXTENSIONS ONE BY ONE. DO NOT USE NESTED LIST
 license_codes = []
+# But why not try Xvfb?
 
 ON_POSIX = 'posix' in sys.builtin_module_names
 
