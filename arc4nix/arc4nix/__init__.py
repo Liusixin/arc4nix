@@ -1,10 +1,11 @@
+import local_server
+
 import os
 import sys
 import pkg_resources
 from .wrap_base import *
-from .wrap_class import Result, Geoprocessor, Envionment
 
-import local_server
+
 import time
 import atexit
 
@@ -25,6 +26,6 @@ assert service_msg == "[CMD]Service"
 # Dummpy gp class
 gp = Geoprocessor()
 
-env = Envionment()
+env = Environment()
 
 

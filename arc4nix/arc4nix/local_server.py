@@ -43,6 +43,7 @@ def redirect_output(out):
     sys.stderr.flush()
     out.close()
 
+
 local_server_err_thread = threading.Thread(target=enqueue_error, args=(local_server_process.stderr, error_queue))
 local_server_err_thread.daemon = True
 local_server_out_thread = threading.Thread(target=redirect_output, args=(local_server_process.stdout,))
@@ -61,5 +62,7 @@ def shutdown():
     local_server_process.stdin.flush()
     time.sleep(3)
     local_server_process.stdin.write("exit" + os.linesep)
+    local_server_process.stdin.close()
+    local_server_process.kill()
     local_server_err_thread.join()
     local_server_out_thread.join()

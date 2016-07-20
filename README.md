@@ -5,6 +5,8 @@ arc4nix
 arc4nix provides a set of [arcpy](http://desktop.arcgis.com/en/arcmap/10.3/analyze/arcpy/what-is-arcpy-.htm)-compatible APIs on both Windows and Linux platform.
 arc4nix uses ArcGIS Java Runtime SDK to provide cross-platform functionality to execute many geospatial analytical [arcpy functions](https://developers.arcgis.com/java/guide/local-server-geoprocessing-tools-support.htm).
 
+It is also possible to set up ArcGIS Server backend for arc4nix to run a wider range to geoprocessing functions. (WIP) The provided geoprocessing package is able to execute arbitrary arcpy functions.
+
 ## How to use
 Simply replace
 ```Python
@@ -25,9 +27,7 @@ That's all!
 	- ArcGIS Runtime Java SDK 10.2.4. You need obtain proper license from ESRI to deploy/redistribute it.
 2. Compiling:
  	1. Install ArcGIS Runtime Java SDK 10.2.4
-
 	2. Add `export ARCGISRUNTIMESDKJAVA_10_2_4=<ArcGIS_Runtime_Installation_folder>` environment variable to your shell environment if using Linux. *It is highly recommended `source init_sdk_java.sh` in `.bashrc` file*. ArcGIS Runtime Java SDK automatically sets it in Windows.
-
 	3. Clone me, then:
 		- In `runtimemanager` folder, execute
 			```
@@ -41,8 +41,9 @@ That's all!
 			$ python setup.py build
 			$ python setup.py install
 			```
+	4. Ensure in arc4nix.data, there is "ExecFile_v101.gpk" and "RuntimeManager-assembly-*.jar"
 
-## Supported fuctions and types
+## Supported functions and types
 arc4nix supports most geospatial analytical functions. Some functions not explicitly supported by ArcGIS Runtime might also work. A typical arcpy function is like
 ```python
 result = arcpy.MinimumBoundingGeometry_management("parks.shp",
@@ -53,17 +54,22 @@ In this example, `arcpy.MinimumBoundingGeometry_management` will be `eval()` on 
 
 The arc4nix acutally `eval()` each arcpy function in a seperate process (actually, a completely different, isolated, odd Python environment). So it is not possible to share variables between your script and remote arcpy functions. arc4nix makes efforts to passthrough variables but not all cases could be supported.
 
-Native Linux paths are acceptable. arc4nix will dynamically map them into correct *wine* path. However, it is highly recommended to start path with "/", ".", ".." or "path:" because this would be the easist way to let arc4nix know the variable is a path to be mapped to *wine*. I am working in progress to tag each parameter in each function whether a path or not. Please be aware that ArcGIS Runtime Local Server has its own working directory, which is different from working directory of the native Python process. Using relative path in wine may cause unexpected result. 
+Native Linux paths are acceptable. arc4nix will dynamically map them into correct *wine* path. However, it is highly recommended to use absolute path on Linux because this would be the easist way to let arc4nix know the variable is a path to be mapped to *wine* drivers (Z:). I am working in progress to tag each parameter in each function whether a path or not. Please be aware that ArcGIS Runtime Local Server has its own working directory, which is different from working directory of the native Python process. Using relative path in wine may cause unexpected result. 
 
 If no license is set via `arc4nix.set_license`, ArcGIS Runtime will work in developer mode which pops up a dialog showing license notice. If you'd like to deploy this program in headless-linux environment (e.g. HPC cluster), you must obtain a stardard license from ESRI and proper extensions.
+
 The package is not extensively tested. Bug reports and contributes are extremely welcome.
 
 
 ## WARNING! WARNING! WARNING!
-THIS PACKAGE WILL FAITHFULLY EXECUTE ANY PYTHON SCRIPTS PASSED TO IT. BAD GUYS CAN COMPLETELY CONTROL YOUR SYSTEM USING EXPOSED LOCAL SERVER INSTANCE. PLEASE ENSURE YOUR WORKING ENVIRONMENT IS COMPLETELY SAFE.
+THIS PACKAGE WILL FAITHFULLY EXECUTE ANY PYTHON SCRIPTS PASSED TO IT. BAD GUYS CAN COMPLETELY CONTROL YOUR SYSTEM USING EXPOSED LOCAL SERVER INSTANCE. PLEASE ENSURE YOUR WORK ENVIRONMENT IS COMPLETELY SAFE AND TRUSTED.
 
 ## How it works:
-*TODO*
+The idea is very simple. For each arcpy call, we actually send that line of code to ArcGIS Runtime Local Server (or remote ArcGIS Server). The GPResult is dumped to a JSON `GPString` and captured by a dummpy `arc4nix.Result` instance. Most of work is to make transparent wrap of arcpy functions.
+
+## Working with arcpy.sa.Raster:
+*Working in progress now. Please check back later*
+arc4nix.sa.Raster generally provides same functionality with arcpy.sa.Raster. expressions like `Raster('A') - Raster('B')` is supported. Conversion between numpy object and Raster object is not supported. ArcGIS Runtime on Linux runs under *wine*, for performance aspect, running numpy operations under *wine* is meaningless. Use GDAL to read raster as numpy locally is simpler.
 
 ## Known unsupported functions
 Functions/Classes in following toolboxes are not implemented. It is possible to call them through arcgisscripting interface, namely `arcpy.gp.<function>`. However, one must use string representation of all input parameters. Wine path mapping might not work.
@@ -76,10 +82,11 @@ Functions/Classes in following toolboxes are not implemented. It is possible to 
 If you're using any of these functions, it is extremely welcomed to provide me some example how they work as python scripts. Some of them are not supported by ArcGIS Runtime. If you figured out how to call these functions via arc4nix (not through `send` function), please also let me know and I will add supports for them.
 
 ## Limitations
-- Passing arc4nix.env to arcpy.env on local server is not supported. You need manually set environments in "predefined block". WIP
-- It it not possible to retrieve any vector dataset from "in_memory" workspace
+- Trying to call functions not listed in [supported function](https://developers.arcgis.com/java/guide/local-server-geoprocessing-tools-support.htm) will trigger a "Tool is not licensed" error. To run these tools with arcpy4nix, you have to set up an ArcGIS Server backend. 
+- Passing arc4nix.env to arcpy.env to server is not supported. You need manually set environments in "predefined block". WIP
+- It it not possible to retrieve any vector dataset from "in_memory" workspace. If you work with "in_memory" workspace, remember save them to a physical path at the end.
 - `Geometry`, `SpatialReferece`, `Extent` classes are not supported now. Implementation is planning.
-- All classes in `arcpy.da` package are not supported. Implementation is nearly impossible. There is no benefits to CRUD geospatial data locally using `arcpy.da`. Please use [gdal/ogr] instead.
+- All classes in `arcpy.da` package are not supported. Implementation is nearly impossible. With best efforts, it is possible to implement a low-efficent SearchCursor dummy class. There is no benefits to CRUD geospatial data locally using `arcpy.da`. Please use [gdal/ogr] instead.
 
 ## License
 arc4nix is licensed under GPLv3 with ESRI software excpetion. 

@@ -7,6 +7,7 @@ import java.util
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.event.Logging
 import arcgis.LocalServerContainer
+import com.esri.core.tasks.ags.geoprocessing.GPJobResource.JobStatus
 import com.esri.core.tasks.ags.geoprocessing._
 import com.esri.runtime.ArcGISRuntime
 import org.apache.commons.codec.binary.Base64
@@ -42,9 +43,10 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
             log.error("Cannot start an empty or non-existed package");
           } else
             context.system.actorSelection("/user/LocalServerInstance") ! LocalServerContainer.start(r(1))
+        // FIXME: We cannot simply assume there will always be 3 parameters input. In case some are missing, it cases problem.
         case s if s.startsWith("execute ") => // We put a " " here to ensure execute will be a complete command
           val r = s.split(' ')
-          println(GeoprocessingApp.execute(r(1), r(2), r(3)))
+          println(s"execute (${r(1)}, ${r(2)}, ${r(3)})")
           self ! GeoprocessingApp.execute(r(1), r(2), r(3))
         case s if s.startsWith("[CMD]") =>
           System.err.println(s)
@@ -68,16 +70,23 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
 
         gp.submitJobAndGetResultsAsync(parameters, Array("Result"), null, new GPJobResultCallbackListener {
           override def onError(throwable: Throwable): Unit = {
-            Console.err.println(throwable.getMessage)
+            System.err.println("[ERROR]:" + throwable.getMessage)
           }
 
           override def onCallback(gpJobResource: GPJobResource, gpParameters: Array[GPParameter]): Unit = {
-            val result = gpParameters(0).asInstanceOf[GPString]
-            log.info(result.getValue)
-            log.info(gpJobResource.getMessages.map(p => p.getDescription).mkString("\n"))
-            // Put result in std err stream so python client can read it.
-            System.err.println(result.getValue)
-            System.err.flush()
+            if(gpJobResource.getJobStatus == JobStatus.SUCCEEDED) {
+              val result = gpParameters(0).asInstanceOf[GPString]
+              log.info(result.getValue)
+              log.info(gpJobResource.getMessages.map(p => p.getDescription).mkString("\n"))
+              // Put result in std err stream so python client can read it.
+              System.err.println(s"[JSON]${result.getValue}")
+              System.err.flush()
+            } else {
+              log.error(gpJobResource.getMessages.map(_.getDescription).mkString("\n"))
+              System.err.println("[JOBFAILED]")
+              System.err.flush()
+            }
+
           }
         })
       } else {

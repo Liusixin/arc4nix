@@ -1,8 +1,3 @@
-/**
-  * Created by sugar on 5/23/15.
-  * License MIT.
-  */
-
 package arcgis
 
 import java.awt.{Container, EventQueue, Window}
@@ -49,46 +44,50 @@ class LocalServerContainer extends Actor{
     }
   })
 
+  private def getButton(container: Container, text: String): JButton = {
+    for(c <- container.getComponents) {
+      println(c)
+      c match {
+        case p:JButton =>
+          println(p.getText)
+          if (p.getText == "OK") {
+            return p
+          }
+        case p: Container => {
+          val q = getButton(p, text)
+          if(q != null) {
+            return q
+          }
+        }
+        case _@p => println(p.toString)
+      }
+    }
+    null
+  }
+
+  private def waitForDialog(title: String) : JDialog = {
+    var win: JDialog = null
+    do {
+      val p = Window.getWindows.find(p => p.isInstanceOf[JDialog])
+      if(p.isEmpty) {
+        Thread.sleep(250)
+      } else {
+        win = p.get.asInstanceOf[JDialog]
+        println(win.getTitle)
+      }
+    } while (win == null)
+    win
+  }
+
   // Start server functions
   private def startDeveloperAutoClick(): Unit = {
-    def getButton(container: Container, text: String): JButton = {
-      for(c <- container.getComponents) {
-        // println(c)
-        c match {
-          case p:JButton =>
-            // println(p.getText)
-            if (p.getText == "OK") {
-              return p
-            }
-          case p: Container => {
-            val q = getButton(p, text)
-            if(q != null) {
-              return q
-            }
-          }
-          case _@p => println(p.toString)
-        }
-      }
-      null
-    }
-    def waitForDialog(title: String) : JDialog = {
-      var win: JDialog = null
-      do {
-        val p = Window.getWindows.find(p => p.isInstanceOf[JDialog])
-        if(p.isEmpty) {
-          Thread.sleep(250)
-        } else {
-          win = p.get.asInstanceOf[JDialog]
-          println(win.getTitle)
-        }
-      } while (win == null)
-      win
-    }
+
     EventQueue.invokeLater(new Runnable {
       override def run(): Unit = server.initializeAsync() })
+
     val win = waitForDialog("ArcGIS Runtime")
     do {
-      Thread.sleep(5000)
+      Thread.sleep(500)
       win.setVisible(true)
     } while (!win.isActive)
     var btn: JButton = null
@@ -98,13 +97,14 @@ class LocalServerContainer extends Actor{
       if (btn == null) {
         Thread.sleep(250)
         counter += 1
-        if(counter > 20)
+        if (counter > 20)
           throw new NullPointerException("nya?!")
-        else
-          btn.doClick()
       }
+      else
+        btn.doClick()
     } while (btn == null)
   }
+
   private def startNormal(): Unit = {
     server.initializeAsync()
   }
