@@ -8,6 +8,9 @@ import threading
 import Queue
 import time
 
+client_id = ""
+license_codes = []
+
 ON_POSIX = 'posix' in sys.builtin_module_names
 
 java_exec = "java" if "JAVA_HOME" not in os.environ else os.path.join(os.environ["JAVA_HOME"], "bin", "java")
@@ -25,8 +28,9 @@ assert os.path.exists(exec_file_gpk) and os.path.isfile(exec_file_gpk)
 error_queue = Queue.Queue()
 
 # We send command through stdin and receive information from stderr, write stdout to stderr.
-print " ".join([java_exec, "-jar", local_server_jar, exec_file_gpk])
-local_server_process = subprocess.Popen([java_exec, "-jar", local_server_jar, exec_file_gpk], stdin=subprocess.PIPE,
+proc_cmd =  [java_exec, "-jar", local_server_jar, exec_file_gpk] + [client_id] + [license_codes]
+print " ".join(proc_cmd)
+local_server_process = subprocess.Popen(proc_cmd, stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         bufsize=1, close_fds=ON_POSIX)
 
