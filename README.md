@@ -27,6 +27,7 @@ That's all!
  	1. Install ArcGIS Runtime Java SDK 10.2.4
 	2. Add `export ARCGISRUNTIMESDKJAVA_10_2_4=<ArcGIS_Runtime_Installation_folder>` environment variable to your shell environment if using Linux. *It is highly recommended `source init_sdk_java.sh` in `.bashrc` file*. ArcGIS Runtime Java SDK automatically sets it in Windows.
 	3. Clone me, then:
+		- Copy all jar files in ArcGIS Runtime Java SDK `sdk` folder to `RuntimeManager/lib`
 		- In `runtimemanager` folder, execute
 			```
 			$ sbt
@@ -71,12 +72,12 @@ arc4nix.sa.Raster generally provides same functionality with arcpy.sa.Raster. ex
 
 ## Known unsupported functions
 Functions/Classes in following toolboxes are not implemented. It is possible to call them through arcgisscripting interface, namely `arcpy.gp.<function>`. However, one must use string representation of all input parameters. Wine path mapping might not work.
-	- Topology 
-	- Geostatistic
-	- Geocoding
-	- Networking
-	- Server
-	- Tracking
+- Topology 
+- Geostatistic
+- Geocoding
+- Networking
+- Server
+- Tracking
 If you're using any of these functions, it is extremely welcomed to provide me some example how they work as python scripts. Some of them are not supported by ArcGIS Runtime. If you figured out how to call these functions via arc4nix (not through `send` function), please also let me know and I will add supports for them.
 
 ## Limitations
