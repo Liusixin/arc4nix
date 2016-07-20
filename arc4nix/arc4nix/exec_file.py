@@ -143,12 +143,11 @@ def execute_file():
 # Main entry
 # It is very luck that even in ArcGIS Runtime embed Python, we still have __main__ here.
 if __name__ == '__main__':
-    if __name__ == "__main__":
-        # Save old working dir
-        old_cwd = os.path.abspath(os.getcwd())
-        execute_file()
-        # Restore old cwd
-        os.chdir(old_cwd)
+    # Save old working dir
+    old_cwd = os.path.abspath(os.getcwd())
+    execute_file()
+    # Restore old cwd
+    os.chdir(old_cwd)
 
 
 
