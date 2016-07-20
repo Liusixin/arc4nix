@@ -69,7 +69,7 @@ def decode_global_vars(global_variables):
             r = StringIO.StringIO(var_value_encoded)
             s = gzip.GzipFile(fileobj=r)
             var_value_encoded = s.read()
-        var_value = var_value_encoded.replace('\n', '')
+        var_value = var_value_encoded.rstrip().replace('\n', '')
         # if we're passing a value, let's eval it
         if ispath.lower() == 'value':
             arc.AddMessage("Add %s=eval(%s)" % (var_name, var_value))
@@ -87,7 +87,7 @@ def decode_global_vars(global_variables):
                     status = proc.returncode
                     arc.AddMessage(output)
                     if status == 0:
-                        var_value = output
+                        var_value = output.strip()
                         arc.AddMessage('Add path %s=%s' % (var_name, var_value))
                         globals()[var_name] = var_value
                     else:
@@ -122,7 +122,7 @@ def execute_file():
 
         if type(result) is arc.Result:
             # TODO: we have a GPResult, Let's wrap its result.
-            result_string = json.dumps(result.__dict__)
+            result_string = dump_gpresult(result)
         else:
             # We try to dump it as a json string. If no possible, just get the basic string
             try:

@@ -4,6 +4,8 @@ import functools
 import uuid
 from pprint import pprint
 import shlex
+from base64 import b64encode
+from .sa.wrap_class import Raster
 
 me = sys.modules[__name__]
 
@@ -101,15 +103,30 @@ def add_predefined_statement(statement):
 def map_path_var(in_path):
     var_name = "p_" + str(uuid.uuid4()).replace("-", "_")
     # Use base64 encoded value, remove trailing "\n"
-    return var_name + "<-path|b64|" + in_path.encode("base64").rstrip(), var_name
+    return var_name + "<-path|b64|" + b64encode(in_path), var_name
 
 
 def parse_string_list(string_list):
+    global __path_expr_holder__
+    local_var_list = []
     args = string_list.split(";")
     # Remember, each arg may also splitted with space, but with quote enclosed space there. So we need a lexer for it.
     # e.g. '"/a b/s1.shp" 1;"/a b/s2.shp" 2'
+    new_args = []
     for arg in args:
         elements = shlex.split(arg)
+        new_elements = []
+        for e in elements:
+            if e.startswith("/"):
+                path_expr, path_var = map_path_var(arg)
+                local_var_list.append(path_var)
+                __path_expr_holder__.append(path_expr)
+                new_elements.append("%s")
+            else:
+                new_elements.append(repr(e))
+        new_args.append(" ".join(new_elements))
+        del elements, new_elements
+    return '\"' + ";".join(new_args) + '\" % (' + ",".join(local_var_list) + ")"
 
 
 def fix_paths_args(arg, force_repr=__on_windows__):
@@ -124,23 +141,23 @@ def fix_paths_args(arg, force_repr=__on_windows__):
     elif isinstance(arg, tuple):
         sub_arg = map(fix_paths_args, arg)
         arg_repr.append("(%s)" % ",".join(sub_arg))
-        # TODO: if args is arcpy4nix.Raster dummpy class, return its path
     # These are typically paths
-
+    elif isinstance(arg, Raster):
+        # TODO: if args is arc4nix.sa.Raster dummpy class, return its path
+        arg_repr.append("Raster")
     # A path firstly must be a string
     elif isinstance(arg, basestring):
         is_path = False
         # If arg is a string list. arcpy may present it with ";". But it cannot be a nested list.
         if arg.find(";") != -1:
             arg_repr.append(parse_string_list(arg))
-        elif arg.startswith("path:"):
-            is_path = True
-            arg = arg[5:]
+        # TODO: Allow user explicitly add "path:" prefix to say it is a path
+        # elif arg.startswith("path:"):
+        #    is_path = True
+        #    arg = arg[5:]
         # Only absolute path need to be taken care of. Relative path should be fine because we switched to script path
         # before any commands.
         elif arg.startswith("/"):
-            is_path = True
-        if is_path:
             path_expr, path_var = map_path_var(arg)
             __path_expr_holder__.append(path_expr)
             arg_repr.append(path_var)
@@ -173,7 +190,6 @@ def send_wrap(name, *args, **kwargs):
     func_sent = "arcpy." + create(name, *args, **kwargs)
     variable_sent = ";".join(__path_expr_holder__)
     preblock_sent = "\n".join(__predefined_block__)
-
 
     print "GlobalVars=" + variable_sent
     print "PreBlock=" + preblock_sent

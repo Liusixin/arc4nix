@@ -42,7 +42,10 @@ class LocalServerContainer extends Actor{
   // Add service listener
   localGP.addLocalServiceStartCompleteListener(new LocalServiceStartCompleteListener {
     override def localServiceStartComplete(event: LocalServiceStartCompleteEvent): Unit = {
-      context.actorSelection("/user/MainApp") ! GeoprocessingApp.messageUrl(event.getUrl)
+      // Write out a CMD to tell python start to send commands
+      val ac = context.actorSelection("/user/MainApp")
+      ac ! GeoprocessingApp.messageUrl(event.getUrl)
+      ac ! "[CMD]Service"
     }
   })
 

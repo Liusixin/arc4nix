@@ -46,8 +46,10 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
           val r = s.split(' ')
           println(GeoprocessingApp.execute(r(1), r(2), r(3)))
           self ! GeoprocessingApp.execute(r(1), r(2), r(3))
+        case s if s.startsWith("[CMD]") =>
+          System.err.println(s)
         case _@s =>
-          println(s"[MESSAGE]$s")
+          println(s"[INFO]$s")
       }
 
     case GeoprocessingApp.execute(input: String, block: String, script: String) =>
@@ -70,10 +72,12 @@ class GeoprocessingApp(val gpkPath: String) extends Actor {
           }
 
           override def onCallback(gpJobResource: GPJobResource, gpParameters: Array[GPParameter]): Unit = {
-            // Well actually we have no results to return....
             val result = gpParameters(0).asInstanceOf[GPString]
-            println(result.getValue)
+            log.info(result.getValue)
             log.info(gpJobResource.getMessages.map(p => p.getDescription).mkString("\n"))
+            // Put result in std err stream so python client can read it.
+            System.err.println(result.getValue)
+            System.err.flush()
           }
         })
       } else {
@@ -137,6 +141,9 @@ object GeoprocessingApp {
     val system = ActorSystem("LocalGP")
     val app = system.actorOf(Props(new GeoprocessingApp(args(0))), "MainApp")
     val server = system.actorOf(Props[LocalServerContainer], "LocalServerInstance")
+
+    // Give MainApp a signal says it is ready to start
+    app ! "[CMD]READY"
 
     while (!system.isTerminated) {
       app ! readLine()

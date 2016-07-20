@@ -19,6 +19,7 @@ class Geoprocessor(object):
     def __getattr__(self, name):
         return functools.partial(self.create, name)
 
+
 class Result:
     """This is a dummy class to keep compatibility with arcpy.Result (GPResult)"""
 
@@ -72,3 +73,8 @@ class Result:
 
     def saveToFile(self, *args):
         raise NotImplementedError("Save to file is meaningless in the dummy class")
+
+
+class Envionment(object):
+    def __init__(self):
+        pass

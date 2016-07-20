@@ -1,3 +1,0 @@
-class sa(object):
-
-    pass
