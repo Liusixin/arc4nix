@@ -3,7 +3,7 @@
 import unittest
 import arcpy
 from arc4nix.exec_file import dump_gpresult
-from arc4nix.result import Result
+from arc4nix.wrap_class import Result
 
 
 class GpResultTestCase(unittest.TestCase):

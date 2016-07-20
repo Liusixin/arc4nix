@@ -34,14 +34,14 @@ class GpFuncionGenTestCase(unittest.TestCase):
 
     def test_union1(self):
         # Union
-        inFeatures = [("/input/counties", 2),["/input/parcels", 1],["/input/state", 2]]
+        inFeatures = [("/input/counties", 2),["../input/parcels", 1],["./input/state", 2]]
         outFeatures = "state_landinfo" 
         arcpy.Union_analysis (inFeatures, outFeatures)
 
     
     def test_union2(self):
         # Union 2
-        inFeatures = ["/input/counties", "/input/parcels", ["/input/state", 2]]
+        inFeatures = ["/input/counties", "input/parcels", ["/input/state", 2]]
         outFeatures = "state_landinfo" 
         arcpy.Union_analysis ("path:/something", in_features=inFeatures, out_feature=outFeatures)        
             

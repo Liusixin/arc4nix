@@ -26,7 +26,7 @@ That's all!
 2. Compiling:
  	1. Install ArcGIS Runtime Java SDK 10.2.4
 
-	2. Add `export ARCGISRUNTIMESDKJAVA_10_2_4=<ArcGIS_Runtime_Installation_folder>` environment variable to your shell environment if using Linux. *It is highly recommended `source init_sdk.sh` in `.bashrc` file*. ArcGIS Runtime Java SDK automatically sets it in Windows.
+	2. Add `export ARCGISRUNTIMESDKJAVA_10_2_4=<ArcGIS_Runtime_Installation_folder>` environment variable to your shell environment if using Linux. *It is highly recommended `source init_sdk_java.sh` in `.bashrc` file*. ArcGIS Runtime Java SDK automatically sets it in Windows.
 
 	3. Clone me, then:
 		- In `runtimemanager` folder, execute
@@ -79,7 +79,7 @@ If you're using any of these functions, it is extremely welcomed to provide me s
 - Passing arc4nix.env to arcpy.env on local server is not supported. You need manually set environments in "predefined block". WIP
 - It it not possible to retrieve any vector dataset from "in_memory" workspace
 - `Geometry`, `SpatialReferece`, `Extent` classes are not supported now. Implementation is planning.
-- `arcpy.da` package is not supported. Implementation is nearly impossible. There is no benefits to CRUD geospatial data locally using `arcpy.da`. Please use [gdal/ogr] instead.
+- All classes in `arcpy.da` package are not supported. Implementation is nearly impossible. There is no benefits to CRUD geospatial data locally using `arcpy.da`. Please use [gdal/ogr] instead.
 
 ## License
 arc4nix is licensed under GPLv3 with ESRI software excpetion. 

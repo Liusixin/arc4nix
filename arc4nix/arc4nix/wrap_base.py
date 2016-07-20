@@ -1,29 +1,102 @@
 import sys
+import os
 import functools
 import uuid
-from pprint import pprint as pp
+from pprint import pprint
+import shlex
 
 me = sys.modules[__name__]
 
 __on_windows__ = sys.platform.find("win") != -1
 
-__all__ = ['add_predefined_statement', 'map_path_var', 'predefined_block']
+__all__ = ['add_predefined_statement', 'map_path_var', '__predefined_block__']
 
 __all_functions__ = {
     'analysis': ['Buffer', 'Clip', 'Erase', 'Identity', 'Intersect', 'SymDiff', 'Update', 'Split', 'Near',
                  'PointDistance', 'Select', 'TableSelect', 'Frequency', 'Statistics', 'CreateThiessenPolygons',
                  'SpatialJoin', 'MultipleRingBuffer', 'GenerateNearTable', 'Union', 'TabulateIntersection',
-                 'PolygonNeighbors']
+                 'PolygonNeighbors'],
+    'management': ['DeleteRows', 'CopyRows', 'CopyFeatures', 'Dissolve', 'MakeFeatureLayer', 'SaveToLayerFile',
+                   'AddJoin', 'RemoveJoin', 'Copy', 'Delete', 'Rename', 'CreatePersonalGDB', 'CreateArcInfoWorkspace',
+                   'CreateFolder', 'CreateFeatureDataset', 'PivotTable', 'CreateFeatureclass', 'CreateTable',
+                   'MakeTableView', 'AddIndex', 'RemoveIndex', 'AddSpatialIndex', 'RemoveSpatialIndex', 'CreateDomain',
+                   'DeleteDomain', 'AddCodedValueToDomain', 'DeleteCodedValueFromDomain', 'SetValueForRangeDomain',
+                   'AssignDomainToField', 'RemoveDomainFromField', 'TableToDomain', 'DomainToTable', 'SelectData',
+                   'AddXY', 'SelectLayerByAttribute', 'SelectLayerByLocation', 'CalculateDefaultGridIndex', 'GetCount',
+                   'CreateVersion', 'DeleteVersion', 'RegisterAsVersioned', 'UnregisterAsVersioned', 'AlterVersion',
+                   'Analyze', 'CreateRelationshipClass', 'TableToRelationshipClass', 'FeatureToPoint',
+                   'FeatureVerticesToPoints', 'FeatureToLine', 'FeatureToPolygon', 'PolygonToLine', 'SplitLine',
+                   'DefineProjection', 'Eliminate', 'RepairGeometry', 'CreateTopology', 'AddFeatureClassToTopology',
+                   'RemoveFeatureClassFromTopology', 'AddRuleToTopology', 'RemoveRuleFromTopology', 'ValidateTopology',
+                   'SetClusterTolerance', 'MakeQueryTable', 'MakeXYEventLayer', 'UpdateAnnotation', 'AppendAnnotation',
+                   'MakeRasterLayer', 'Flip', 'Mirror', 'ProjectRaster', 'Rescale', 'Rotate', 'Shift', 'Warp', 'Append',
+                   'DeleteFeatures', 'MakeRasterCatalogLayer', 'AddField', 'AssignDefaultToField', 'CalculateField',
+                   'DeleteField', 'MultipartToSinglepart', 'Integrate', 'Merge', 'MergeBranch', 'FeatureCompare',
+                   'FileCompare', 'RasterCompare', 'TableCompare', 'CreateCustomGeoTransformation', 'CreateFishnet',
+                   'CreateFileGDB', 'UpgradeSpatialReference', 'Adjust3DZ', 'Compress', 'CompareReplicaSchema',
+                   'CreateReplica', 'CreateReplicaFootPrints', 'CreateReplicaFromServer',
+                   'ExportAcknowledgementMessage', 'ExportDataChangeMessage', 'ExportReplicaSchema', 'ImportMessage',
+                   'ImportReplicaSchema', 'ReExportUnacknowledgedMessages', 'SynchronizeChanges', 'AddSubtype',
+                   'RemoveSubtype', 'SetDefaultSubtype', 'SetSubtypeField', 'CalculateValue', 'CreateRandomPoints',
+                   'AddColormap', 'BuildRasterAttributeTable', 'DeleteColormap', 'DeleteRasterAttributeTable',
+                   'BuildPyramids', 'CalculateStatistics', 'GetRasterProperties', 'CopyRaster', 'CreateRandomRaster',
+                   'CreateRasterDataset', 'Mosaic', 'WorkspaceToRasterDataset', 'CopyRasterCatalogItems',
+                   'CreateRasterCatalog', 'DeleteRasterCatalogItems', 'WorkspaceToRasterCatalog',
+                   'CreateOrthoCorrectedRasterDataset', 'CreatePansharpenedRasterDataset', 'Clip', 'CompositeBands',
+                   'Resample', 'ExportRasterWorldFile', 'GetCellValue', 'RasterCatalogToRasterDataset',
+                   'ExtractSubDataset', 'TINCompare', 'MakeImageServerLayer', 'MakeWCSLayer', 'ApplySymbologyFromLayer',
+                   'ExportRasterCatalogPaths', 'RepairRasterCatalogPaths', 'MigrateStorage', 'MosaicToNewRaster',
+                   'Dice', 'SplitLineAtPoint', 'UnsplitLine', 'SplitRaster', 'EliminatePolygonPart', 'MakeGraph',
+                   'SaveGraph', 'PointsToLine', 'ChangeVersion', 'RegisterWithGeodatabase', 'UpgradeGDB',
+                   'CalculateDefaultClusterTolerance', 'DeleteIdentical', 'FindIdentical', 'ConsolidateLayer',
+                   'ConsolidateMap', 'PackageLayer', 'PackageMap', 'ChangePrivileges', 'CreateSpatialReference',
+                   'RasterToDTED', 'BearingDistanceToLine', 'TableToEllipse', 'XYToLine', 'ConvertCoordinateNotation',
+                   'CompressFileGeodatabaseData', 'UncompressFileGeodatabaseData', 'ExtractPackage', 'SharePackage',
+                   'BuildPyramidsandStatistics', 'MakeMosaicLayer', 'MinimumBoundingGeometry',
+                   'AddRastersToMosaicDataset', 'BuildBoundary', 'BuildFootprints', 'BuildOverviews', 'BuildSeamlines',
+                   'CalculateCellSizeRanges', 'ColorBalanceMosaicDataset', 'ComputeDirtyArea', 'CreateMosaicDataset',
+                   'CreateReferencedMosaicDataset', 'DefineMosaicDatasetNoData', 'DefineOverviews',
+                   'GenerateExcludeArea', 'ImportMosaicDatasetGeometry', 'RemoveRastersFromMosaicDataset',
+                   'SynchronizeMosaicDataset', 'CalculateEndTime', 'ConvertTimeField', 'ConvertTimeZone',
+                   'TransposeFields', 'AddGlobalIDs', 'WarpFromFile', 'ExportXMLWorkspaceDocument',
+                   'ImportXMLWorkspaceDocument', 'AlterMosaicDatasetSchema', 'AnalyzeMosaicDataset', 'Compact',
+                   'ClearWorkspaceCache', 'AnalyzeDatasets', 'RebuildIndexes', 'CheckGeometry', 'ReconcileVersions',
+                   'CreateArcSDEConnectionFile', 'AddEdgeEdgeConnectivityRuleToGeometricNetwork',
+                   'AddEdgeJunctionConnectivityRuleToGeometricNetwork', 'CreateGeometricNetwork',
+                   'RemoveConnectivityRuleFromGeometricNetwork', 'RemoveEmptyFeatureClassFromGeometricNetwork',
+                   'TraceGeometricNetwork', 'AddAttachments', 'DisableAttachments', 'EnableAttachments',
+                   'RemoveAttachments', 'ExportTopologyErrors', 'SetMosaicDatasetProperties', 'SetRasterProperties',
+                   'MakeLasDatasetLayer', 'DownloadRasters', 'CreateEnterpriseGeodatabase',
+                   'EnableEnterpriseGeodatabase', 'FeatureEnvelopeToPolygon', 'MakeQueryLayer', 'SetFlowDirection',
+                   'CreateDatabaseConnection', 'DeleteMosaicDataset', 'CreateSpatialType',
+                   'GenerateAttachmentMatchTable', 'ConsolidateLocator', 'PackageLocator', 'CreateDatabaseView',
+                   'SortCodedValueDomain', 'DisableEditorTracking', 'EnableEditorTracking', 'TruncateTable',
+                   'ConsolidateResult', 'PackageResult', 'UpgradeDataset', 'AddFilesToLasDataset', 'CreateLasDataset',
+                   'LasDatasetStatistics', 'LasPointStatsAsRaster', 'RemoveFilesFromLasDataset',
+                   'ExportMosaicDatasetPaths', 'RepairMosaicDatasetPaths', 'CreateDatabaseUser', 'JoinField',
+                   'EditRasterFunction', 'BuildMosaicDatasetItemCache', 'CreateUnRegisteredFeatureclass',
+                   'CreateUnRegisteredTable', 'BatchBuildPyramids', 'BatchCalculateStatistics', 'RecoverFileGDB',
+                   'Sort', 'CreateMapTilePackage', 'MatchPhotosToRowsByTime', 'GeoTaggedPhotosToPoints',
+                   'RegisterRaster', 'AddIncrementingIDField', 'CreateRole', 'ExportTileCache',
+                   'GenerateTileCacheTilingScheme', 'ImportTileCache', 'ManageTileCache', 'DisableArchiving',
+                   'EnableArchiving', 'MergeMosaicDatasetItems', 'SplitMosaicDatasetItems', 'ComputePansharpenWeights',
+                   'DetectFeatureChanges', 'Project', 'BatchProject', 'AddGeometryAttributes',
+                   'MigrateRelationshipClass', 'FindDisconnectedFeaturesInGeometricNetwork',
+                   'ExportMosaicDatasetGeometry', 'ExportMosaicDatasetItems', 'AlterField', 'CreateRuntimeContent',
+                   'RebuildGeometricNetwork', 'VerifyAndRepairGeometricNetworkConnectivity', 'AddFieldConflictFilter',
+                   'RemoveFieldConflictFilter', 'CreateVersionedView', 'ReconcileVersion', 'Graph', 'GraphTemplate']
 }
 
+# GlobalVars
 __path_expr_holder__ = []
+# PreBlock
+__predefined_block__ = []
 
-predefined_block = []
 
 def add_predefined_statement(statement):
     if isinstance(statement, basestring):
-        predefined_block.append(statement)
-        
+        __predefined_block__.append(statement)
+
 
 def map_path_var(in_path):
     var_name = "p_" + str(uuid.uuid4()).replace("-", "_")
@@ -31,7 +104,16 @@ def map_path_var(in_path):
     return var_name + "<-path|b64|" + in_path.encode("base64").rstrip(), var_name
 
 
+def parse_string_list(string_list):
+    args = string_list.split(";")
+    # Remember, each arg may also splitted with space, but with quote enclosed space there. So we need a lexer for it.
+    # e.g. '"/a b/s1.shp" 1;"/a b/s2.shp" 2'
+    for arg in args:
+        elements = shlex.split(arg)
+
+
 def fix_paths_args(arg, force_repr=__on_windows__):
+    global __path_expr_holder__
     if force_repr:
         return repr(arg)
     arg_repr = []
@@ -41,17 +123,22 @@ def fix_paths_args(arg, force_repr=__on_windows__):
         arg_repr.append("[%s]" % ",".join(sub_arg))
     elif isinstance(arg, tuple):
         sub_arg = map(fix_paths_args, arg)
-        arg_repr.append("(%s)" % ",".join(sub_arg))    
-    # TODO: if args is arcpy4nix.Raster dummpy class, return its path
+        arg_repr.append("(%s)" % ",".join(sub_arg))
+        # TODO: if args is arcpy4nix.Raster dummpy class, return its path
     # These are typically paths
-    
+
     # A path firstly must be a string
     elif isinstance(arg, basestring):
         is_path = False
-        if arg.startswith("path:"):
+        # If arg is a string list. arcpy may present it with ";". But it cannot be a nested list.
+        if arg.find(";") != -1:
+            arg_repr.append(parse_string_list(arg))
+        elif arg.startswith("path:"):
             is_path = True
             arg = arg[5:]
-        elif arg.startswith("/") or arg.startswith("./") or arg.startswith("../"):
+        # Only absolute path need to be taken care of. Relative path should be fine because we switched to script path
+        # before any commands.
+        elif arg.startswith("/"):
             is_path = True
         if is_path:
             path_expr, path_var = map_path_var(arg)
@@ -61,8 +148,9 @@ def fix_paths_args(arg, force_repr=__on_windows__):
             arg_repr.append(repr(arg))
     else:
         arg_repr.append(repr(arg))
-    
+
     return ",".join(arg_repr)
+
 
 def fix_paths_kwargs(kwarg, force_repr=__on_windows__):
     var, arg = kwarg
@@ -70,19 +158,40 @@ def fix_paths_kwargs(kwarg, force_repr=__on_windows__):
 
 
 def send_wrap(name, *args, **kwargs):
+    global __path_expr_holder__
+    global __predefined_block__
+    # Before send, we append current working directory here.
+    _pwd = os.path.abspath(os.getcwd())
+    # We add a predefined block to switch process in Local Server same as script's current dir.
+    if __on_windows__:
+        __predefined_block__.append('os.chdir(%s)' % repr(_pwd))
+    else:
+        _pwd_var_value, _pwd_var_name = map_path_var(_pwd)
+        __path_expr_holder__.append(_pwd_var_value)
+        __predefined_block__.append('os.chdir(%s)' % _pwd_var_name)
+
+    func_sent = "arcpy." + create(name, *args, **kwargs)
     variable_sent = ";".join(__path_expr_holder__)
-    func_str = create(name, *args, **kwargs)
-    print(func_str)
+    preblock_sent = "\n".join(__predefined_block__)
+
+
+    print "GlobalVars=" + variable_sent
+    print "PreBlock=" + preblock_sent
+    print "ScriptBody=" + func_sent
+    print "==================================================="
+
+    # After sending, clean global variables.
+    __path_expr_holder__ = []
+    __predefined_block__ = []
 
 
 def create(name, *args, **kwargs):
     global __path_expr_holder__
-    __path_expr_holder__ = []
     expr = name + "("
     if args:
         # list args
         new_args = map(fix_paths_args, args)
-        expr += ", ".join(new_args)                                                                     
+        expr += ", ".join(new_args)
     if kwargs:
         if args:
             expr += ", "
@@ -90,7 +199,7 @@ def create(name, *args, **kwargs):
         new_kwargs = map(fix_paths_kwargs, kwargs.items())
         expr += ", ".join(new_kwargs)
     expr += ")"
-    return repr(expr)
+    return expr
 
 
 for cat, func_list in __all_functions__.items():

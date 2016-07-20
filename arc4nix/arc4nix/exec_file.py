@@ -5,6 +5,8 @@ So we call it "execute a script"
 To keep everything simple, we must put all things in one, single, big file.
 """
 
+import os
+import sys
 import subprocess
 import StringIO
 import gzip
@@ -38,7 +40,7 @@ def detect_wine():
     on_wine = True
     try:
         subprocess.check_call(["winepath"])
-    except WindowsError:
+    except OSError: # WindowsError is OSError
         # If we are not in wine, we should not have winepath command.
         on_wine = False
     return on_wine
@@ -55,6 +57,8 @@ def decode_global_vars(global_variables):
     arcpy = arc
     var_list = global_variables.split(';')
     for var_str in var_list:
+        if not var_str.strip():
+            continue
         var_name, var_value_tuple = var_str.split('<-')
         ispath, encode, var_value_encoded = var_value_tuple.split('|')
         # Encoding: gzip -> b64
@@ -102,14 +106,11 @@ def execute_file():
     predefined_block = arc.GetParameterAsText(1)
     script_body = arc.GetParameterAsText(2)
 
-    for k, v in decode_global_vars(global_vars).iteritems():
-        arc.AddMessage("Add %s=%s to global variables" % (k, v))
-        globals()[k] = v
+    decode_global_vars(global_vars)
 
     # This is the default settings.
     arc.env.overwriteOutput = True
     arc.env.workspace = "in_memory"
-    arc.AddMessage(__name__)
 
     exec predefined_block.decode('string_escape') in globals()
 
@@ -141,8 +142,13 @@ def execute_file():
 
 # Main entry
 # It is very luck that even in ArcGIS Runtime embed Python, we still have __main__ here.
-if __name__ == "__main__":
-    execute_file()
+if __name__ == '__main__':
+    if __name__ == "__main__":
+        # Save old working dir
+        old_cwd = os.path.abspath(os.getcwd())
+        execute_file()
+        # Restore old cwd
+        os.chdir(old_cwd)
 
 
 

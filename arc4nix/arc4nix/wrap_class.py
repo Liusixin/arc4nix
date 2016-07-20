@@ -1,5 +1,23 @@
 import json
+import functools
 
+from .wrap_base import create as basecreate
+
+
+class Geoprocessor(object):
+    """This is the passthrough gp function."""
+    share_state = {}
+
+    def __init__(self):
+        self.__dict__ = Geoprocessor.share_state
+
+    def create(self, name, *args):
+        if not all([isinstance(a, basestring) for a in args]):
+            raise ValueError("arcpy.gp requires all parameter must be string")
+        print("arcpy.gp." + basecreate(name, *args))
+
+    def __getattr__(self, name):
+        return functools.partial(self.create, name)
 
 class Result:
     """This is a dummy class to keep compatibility with arcpy.Result (GPResult)"""
