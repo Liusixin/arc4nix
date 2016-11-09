@@ -12,7 +12,7 @@ import StringIO
 import gzip
 import json
 
-# By any means, we first import. This is a workaround to prevent ArcGIS Desktop detect imports when creating the gpk
+# By any menas, we first import. This is a workaround to prevent ArcGIS Desktop detect imports when creating the gpk
 # DO NOT USE ```import arcpy```
 arc = __import__("arcpy")
 
@@ -41,7 +41,7 @@ def detect_wine():
     on_wine = True
     try:
         subprocess.check_call(["winepath"])
-    except OSError:  # WindowsError is OSError
+    except OSError: # WindowsError is OSError
         # If we are not in wine, we should not have winepath command.
         on_wine = False
     return on_wine
@@ -55,6 +55,7 @@ def decode_global_vars(global_variables):
 
     # Now let's assign arcpy locally allow global variables importing "arcpy"
     # e.g. some_path<-path|raw|/home/username/someraster.img;p<-value|raw|arcpy.sa.Raster(some_path)
+    # NOTE: This is intended, NOT A BUG
     arcpy = arc
     var_list = global_variables.split(';')
     for var_str in var_list:
@@ -62,8 +63,8 @@ def decode_global_vars(global_variables):
             continue
         var_name, var_value_tuple = var_str.split('<-')
         ispath, encode, var_value_encoded = var_value_tuple.split('|')
-        # Encoding: gzip -> b64
-        # Decoding: b64 -> gzip
+        # Encoding: zlib -> b64
+        # Decoding: b64 -> zlib
         if encode.find('b64') != -1:
             var_value_encoded = var_value_encoded.decode('base64').replace('\n', '')
         if encode.find('zlib') != -1:
@@ -137,15 +138,14 @@ def execute_file():
     except SyntaxError:
         # Otherwise we simply execute the command, if everything is "OK" we return "true", otherwise "false"
         try:
-            exec script_body in globals()
+            exec script_body.decode('string_escape') in globals()
             arc.SetParameterAsText(3, "true")
         except Exception, ex:
             arc.AddError(ex.message)
             arc.SetParameterAsText(3, "false")
 
-
 # Main entry
-# It is very luck that even in ArcGIS Runtime embed Python, we still have __main__ here.
+# It is very luck that even in ArcGIS Runtime embbed Python, we still have __main__ here.
 if __name__ == '__main__':
     # Save old working dir
     old_cwd = os.path.abspath(os.getcwd())
