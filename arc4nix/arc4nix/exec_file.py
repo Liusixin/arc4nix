@@ -11,7 +11,8 @@ import subprocess
 import StringIO
 import gzip
 import json
-# By any menas, we first import. This is a workaround to prevent ArcGIS Desktop detect imports when creating the gpk
+
+# By any means, we first import. This is a workaround to prevent ArcGIS Desktop detect imports when creating the gpk
 # DO NOT USE ```import arcpy```
 arc = __import__("arcpy")
 
@@ -40,7 +41,7 @@ def detect_wine():
     on_wine = True
     try:
         subprocess.check_call(["winepath"])
-    except OSError: # WindowsError is OSError
+    except OSError:  # WindowsError is OSError
         # If we are not in wine, we should not have winepath command.
         on_wine = False
     return on_wine
@@ -82,7 +83,9 @@ def decode_global_vars(global_variables):
             on_wine = detect_wine()
             if ispath.lower() == 'path' and on_wine:
                 try:
-                    proc = subprocess.Popen(["winepath", "-w", var_value], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    proc = subprocess.Popen(["winepath", "-w", var_value],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
                     output, err = proc.communicate()
                     status = proc.returncode
                     arc.AddMessage(output)
@@ -130,15 +133,16 @@ def execute_file():
             except TypeError:
                 result_string = str(result)
         # Put string result back to Geoprocessor
-        arc.SetParameter(3, result_string)
+        arc.SetParameterAsText(3, result_string)
     except SyntaxError:
         # Otherwise we simply execute the command, if everything is "OK" we return "true", otherwise "false"
         try:
             exec script_body in globals()
-            arc.SetParameter(3, "true")
+            arc.SetParameterAsText(3, "true")
         except Exception, ex:
             arc.AddError(ex.message)
-            arc.SetParameter(3, "false")
+            arc.SetParameterAsText(3, "false")
+
 
 # Main entry
 # It is very luck that even in ArcGIS Runtime embed Python, we still have __main__ here.
@@ -148,7 +152,3 @@ if __name__ == '__main__':
     execute_file()
     # Restore old cwd
     os.chdir(old_cwd)
-
-
-
-

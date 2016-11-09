@@ -1,13 +1,21 @@
 package arcgis
 
 import java.awt.{Container, EventQueue, Window}
+import java.io.IOException
 import javax.swing.{JButton, JDialog}
 
 import akka.actor.Actor
+import akka.event.Logging
 import com.esri.client.local._
 import com.esri.core.runtime.LicenseLevel
 import com.esri.runtime.ArcGISRuntime
 import main.GeoprocessingApp
+import org.apache.http.HttpStatus
+import org.apache.http.client.ResponseHandler
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.client.methods.HttpGet
+
+import scala.collection.JavaConversions._
 
 /*
  * Currently, we could only start one local server PER NODE
@@ -16,6 +24,20 @@ import main.GeoprocessingApp
 class LocalServerContainer extends Actor{
 
   private var gpkPath: String = _
+
+  private var _remote = false
+
+  private val log = Logging.getLogger(context.system, this)
+
+  def isUsingArcServer: Boolean = {
+    if(_remote) {
+      // If use remote, make sure local server is down
+      assert(!server.isInitialized, "Local server is up, but we're using remote server. CHECK!")
+    } else {
+      assert(server.isInitialized, "Local server is down, but we're going to use it. CHECK!")
+    }
+    _remote
+  }
 
   val server = LocalServer.getInstance()
   // Add server listener
@@ -44,6 +66,8 @@ class LocalServerContainer extends Actor{
     }
   })
 
+
+  // Workaround Developer license
   private def getButton(container: Container, text: String): JButton = {
     for(c <- container.getComponents) {
       println(c)
@@ -53,12 +77,11 @@ class LocalServerContainer extends Actor{
           if (p.getText == "OK") {
             return p
           }
-        case p: Container => {
+        case p: Container =>
           val q = getButton(p, text)
           if(q != null) {
             return q
           }
-        }
         case _@p => println(p.toString)
       }
     }
@@ -103,23 +126,23 @@ class LocalServerContainer extends Actor{
       else
         btn.doClick()
     } while (btn == null)
+
   }
+
 
   private def startNormal(): Unit = {
     server.initializeAsync()
   }
 
-  /*
-   * Start the server, if it is the developer license, let's workaround it. We have no choice to keep compatibility on
-   * headless Linux machines.
-   */
+  // Start the server, if it is the developer license, let's workaround it. We have no choice to keep compatibility on
+  // headless Linux machines.
   private def startServerInternal(gpkPath: String): Unit = {
     // Pass this value so the event listener can use it.
     this.gpkPath = gpkPath
     // If server is initialized, return service url
     if(server.isInitialized) {
       context.actorSelection("/user/MainApp") ! GeoprocessingApp.messageUrl(localGP.getUrlGeoprocessingService)
-    } else { // Otherwise, start the service and service.
+    } else { // Otherwise, start the server and service.
       if (ArcGISRuntime.License.getLicenseLevel == LicenseLevel.DEVELOPER) {
         startDeveloperAutoClick()
       } else {
@@ -128,10 +151,47 @@ class LocalServerContainer extends Actor{
     }
   }
 
+  private def setRemoteServiceUrl(serviceUrl: String): Unit = {
+    // Check if it is a valid service url
+    try {
+      val httpclient = new DefaultHttpClient()
+      val get = new HttpGet(serviceUrl + "/Execute Script")
+      val response = httpclient.execute(get)
+      val statusCode = response.getStatusLine.getStatusCode
+      if (statusCode != HttpStatus.SC_OK) {
+        log.error("Wrong service URL. Service not set, still in local mode")
+      }
+      log.info("Using remote service, shutdown local services and server")
+      if (server.isInitialized) {
+          val sc = server.getServices
+          sc.foreach(p => p.stop())
+          server.shutdown()
+      }
+      this._remote = true
+    } catch {
+      case x: IOException => log.error("Maybe network fail, still using local services")
+      case x: Exception => throw x
+    }
+
+
+    if(!serviceUrl.endsWith("Execute Script")) {
+      log.error("Wrong ArcGIS server service url!")
+      return
+    }
+    // We will shutdown the local server if we use a remote url
+    if(server.isInitialized) {
+      server.shutdownAsync() // Shutdown server, if started!
+      _remote = true
+    }
+    context.actorSelection("/user/MainApp") ! GeoprocessingApp.messageUrl(serviceUrl)
+  }
+
   override def receive: Receive = {
 
     case LocalServerContainer.start(gpkPath: String) =>
       this.startServerInternal(gpkPath)
+    case LocalServerContainer.setService(serviceUrl: String) =>
+      this.setRemoteServiceUrl(serviceUrl)
     case LocalServerContainer.exit =>
       server.shutdown()
       context.system.shutdown()
@@ -144,6 +204,7 @@ class LocalServerContainer extends Actor{
 
 object LocalServerContainer {
   case class start(gpkPath: String)
+  case class setService(serviceUrl: String)
   case class execute(input: String, script: String, output: String)
   case class result(output: String)
   case object exit

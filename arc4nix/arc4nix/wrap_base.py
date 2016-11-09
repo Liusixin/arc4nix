@@ -270,7 +270,8 @@ def send_wrap(name, *args, **kwargs):
     preblock_sent = "\n".join(__predefined_block__)
 
     # FIXME: it is a dangerous assumption, __predefined_block__ is never empty
-    command_sent = "execute b64:%s b64:%s b64:%s" % (b64encode(variable_sent), b64encode(preblock_sent), b64encode(func_sent))
+    command_sent = "execute b64:%s b64:%s b64:%s" % (
+        b64encode(variable_sent), b64encode(preblock_sent), b64encode(func_sent))
     command_sent += os.linesep
 
     print >> sys.stderr, "GlobalVars=" + variable_sent
@@ -293,6 +294,7 @@ def send_wrap(name, *args, **kwargs):
             gp_result = json.loads(gp_result_str[6:])
     else:
         raise RuntimeError("Script failed. Please check error log!")
+    return gp_result
 
 
 def create(name, *args, **kwargs):

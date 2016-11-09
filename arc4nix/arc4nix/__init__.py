@@ -1,16 +1,13 @@
 import local_server
 
-import os
-import sys
-import pkg_resources
 from .wrap_base import *
-import time
 import atexit
 
 
 def set_license(client_id, license_code=[]):
     local_server.client_id = client_id
     local_server.license_codes = license_code
+
 
 def kill_server_at_exit():
     local_server.shutdown()
